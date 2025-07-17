@@ -1,36 +1,45 @@
 (function () {
-  // Get siteId from query string (e.g., ?siteId=6878a4918224888081193f7d)
-  const urlParams = new URLSearchParams(window.location.search);
-  const siteId = urlParams.get("siteId");
-
-  if (!siteId) {
-    console.warn("🔥 Heatmap Tracker: 'siteId' is missing in the script URL!");
-    return;
-  }
-
   const sessionId = Math.random().toString(36).substr(2, 9);
+  const domain = window.location.hostname;
 
-  function sendEvent(type, x, y) {
-    fetch("https://heatmap-api.onrender.com/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        siteId,
-        type,
-        x,
-        y,
-        screen: {
-          width: window.innerWidth,
-          height: window.innerHeight
-        },
-        sessionId
-      })
-    }).catch((err) =>
-      console.error("🔥 Heatmap Tracker: Error sending event", err)
-    );
-  }
+  // Call your backend to get the siteId for the current domain
+  fetch(`https://backend-tmo1.onrender.com/api/sites/domain/${domain}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const siteId = data._id;
 
-  document.addEventListener("click", (e) => {
-    sendEvent("click", e.pageX, e.pageY);
-  });
+      if (!siteId) {
+        console.warn("No site ID found for this domain.");
+        return;
+      }
+
+      function sendEvent(type, x, y) {
+        fetch("https://backend-tmo1.onrender.com/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            siteId,
+            type,
+            x,
+            y,
+            screen: { width: window.innerWidth, height: window.innerHeight },
+            sessionId,
+          }),
+        });
+      }
+
+      // Track click events
+      document.addEventListener("click", (e) =>
+        sendEvent("click", e.pageX, e.pageY)
+      );
+
+      // You can also track scroll, mousemove etc. (optional)
+      // Example: Scroll
+      window.addEventListener("scroll", () => {
+        sendEvent("scroll", window.scrollX, window.scrollY);
+      });
+    })
+    .catch((err) => {
+      console.error("Error loading site ID:", err);
+    });
 })();
