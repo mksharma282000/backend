@@ -10,12 +10,16 @@ router.post("/", async (req, res) => {
 });
 
 // Get all sites
-router.get("/", async (req, res) => {
-  const sites = await Site.find();
-  res.json(sites);
+router.get('/:siteId', async (req, res) => {
+  try {
+    const site = await Site.findById(req.params.siteId);
+    if (!site) return res.status(404).json({ error: "Site not found" });
+    res.json(site);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-// ✅ Normalize domain and fetch site by domain
 // ✅ Normalize domain and fetch site by domain
 router.get("/domain/:domain", async (req, res) => {
   try {
