@@ -15,14 +15,19 @@ router.get('/', async (req, res) => {
     res.json(sites);
 });
 
-// ✅ Get site by domain (for tracker.js) — using 'url' field in DB
+// ✅ Normalize domain and fetch site by domain
 router.get('/domain/:domain', async (req, res) => {
     try {
-        const domain = req.params.domain;
+        let domain = req.params.domain;
+
+        // 🔧 Normalize the domain (strip protocol, port, etc.)
+        domain = domain.replace(/^https?:\/\//, '').split(':')[0]; // remove http/https and port
+        domain = domain.replace(/^www\./, ''); // remove www
+
         const site = await Site.findOne({ url: domain });
 
         if (!site) {
-            return res.status(404).json({ message: 'Site not found' });
+            return res.status(404).json({ message: 'Site not found for domain: ' + domain });
         }
 
         res.json({ siteId: site._id });
