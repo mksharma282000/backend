@@ -15,12 +15,17 @@ router.get('/', async (req, res) => {
     res.json(sites);
 });
 
-// 🔥 GET site by domain (needed by tracker.js)
+// ✅ Get site by domain (for tracker.js) — using 'url' field in DB
 router.get('/domain/:domain', async (req, res) => {
     try {
-        const site = await Site.findOne({ domain: req.params.domain });
-        if (!site) return res.status(404).json({ message: 'Site not found' });
-        res.json(site);
+        const domain = req.params.domain;
+        const site = await Site.findOne({ url: domain });
+
+        if (!site) {
+            return res.status(404).json({ message: 'Site not found' });
+        }
+
+        res.json({ siteId: site._id });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
