@@ -2,6 +2,16 @@ const express = require("express");
 const Site = require("../models/Site");
 const router = express.Router();
 
+// ✅ Get all sites
+router.get('/', async (req, res) => {
+  try {
+    const sites = await Site.find();
+    res.json(sites);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Add new site
 router.post("/", async (req, res) => {
   const site = new Site(req.body);
@@ -9,7 +19,7 @@ router.post("/", async (req, res) => {
   res.json(site);
 });
 
-// Get all sites
+// Get site by ID
 router.get('/:siteId', async (req, res) => {
   try {
     const site = await Site.findById(req.params.siteId);
@@ -20,16 +30,16 @@ router.get('/:siteId', async (req, res) => {
   }
 });
 
-// ✅ Normalize domain and fetch site by domain
+// Get site by domain
 router.get("/domain/:domain", async (req, res) => {
   try {
     let domain = req.params.domain;
 
-    // 🔧 Normalize the domain (strip protocol, port, etc.)
-    domain = domain.replace(/^https?:\/\//, "").split(":")[0]; // remove http/https and port
-    domain = domain.replace(/^www\./, ""); // remove www
+    // Normalize the domain
+    domain = domain.replace(/^https?:\/\//, "").split(":")[0];
+    domain = domain.replace(/^www\./, "");
 
-    const site = await Site.findOne({ url: domain }); // ✅ fix this line
+    const site = await Site.findOne({ url: domain });
 
     if (!site) {
       return res
